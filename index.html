@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Link2Listen</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+
+<body class="bg-rose-100 text-taupe-100 min-h-screen flex flex-col items-center justify-center p-4 md:p-6 font-sans">
+
+    <div class="max-w-xl w-full bg-rose-300 p-6 md:p-8 rounded-2xl shadow-2xl border border-red-900 transition-all">
+        
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-black tracking-tight bg-gradient-to-r from-orange-500 to-orange-700 bg-clip-text text-transparent mb-2">
+                Link2Listen
+            </h1>
+            <p class="text-taupe-100 text-sm">Transform any article URL into a clear audio podcast instantly.</p>
+        </div>
+
+        <div class="space-y-4">
+            <div class="relative">
+                <input 
+                    type="url" 
+                    id="urlInput" 
+                    placeholder="https://example.com/awesome-article" 
+                    class="w-full px-4 py-3.5 bg-red-400 border border-red-900 rounded-xl text-taupe-100 placeholder-taupe-100 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all text-sm"
+                />
+            </div>
+            <button 
+                onclick="convertUrl()" 
+                id="submitBtn"
+                class="w-full bg-gradient-to-r from-orange-500 to-orange-700 hover:from-sky-300 hover:to-sky-400 font-bold py-3.5 px-4 rounded-xl cursor-pointer shadow-lg shadow-cyan-950 text-sm tracking-wide transition-all active:scale-[0.99]"
+            >
+                Convert to Audio
+            </button>
+        </div>
+
+        <div id="loadingState" class="hidden mt-8 flex flex-col items-center justify-center space-y-3 py-4 animate-fade-in">
+            <div class="w-10 h-10 border-4 border-cyan-500/20 border-t-cyan-400 rounded-full animate-spin"></div>
+            <p class="text-xs font-medium text-cyan-400 tracking-widest uppercase animate-pulse">Reading article & generating audio...</p>
+        </div>
+
+        <div id="audioPlayerContainer" class="hidden mt-8 pt-6 border-t border-slate-800/80 space-y-3">
+            <div class="flex items-center justify-between">
+                <p class="text-xs text-slate-400 uppercase tracking-wider font-bold flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                    Your Audio Ready
+                </p>
+            </div>
+            <audio id="audioPlayer" controls class="w-full accent-cyan-500"></audio>
+        </div>
+  </div>
+
+  <script>
+    async function convertUrl()
+    {
+      const urlInput = document.getElementById('urlInput').value;
+      const audioPlayer = document.getElementById('audioPlayer');
+      const loadingState = document.getElementById('loadingState');
+      const audioPlayerContainer = document.getElementById('audioPlayerContainer');
+      const submitBtn = document.getElementById('submitBtn');
+
+      if(!urlInput)
+      {
+        alert("Please Enter A URL");
+        return;
+      }
+      submitBtn.disabled = true;
+      submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      loadingState.classList.remove('hidden');
+      audioPlayerContainer.classList.add('hidden');
+
+      try
+      {
+        const response = await fetch('http://127.0.0.1:8000/convert',
+        {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({url: urlInput})
+        }
+        );
+
+        if(!response.ok)
+        {
+          throw new Error("Server rejected the request or failed to parse website");
+        }
+        
+        const audioBlob = await response.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+
+        audioPlayer.src = audioUrl;
+        audioPlayerContainer.classList.remove('hidden');
+        audioPlayer.play();
+      }catch (error)
+      {
+        alert("Error: " + error.message);
+      }
+      finally
+      {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        loadingState.classList.add('hidden');
+      }
+    }
+  </script>
+
+</body>
+</html>
+
+
+
+
+
+
+
